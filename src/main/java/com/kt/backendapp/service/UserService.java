@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class UserService {
+public class UserService implements UserServiceInterface {
     
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;

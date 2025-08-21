@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class QuestionService {
+public class QuestionService implements QuestionServiceInterface {
     
     private final QuestionRepository questionRepository;
     private final QuizRepository quizRepository;
@@ -60,7 +60,7 @@ public class QuestionService {
     }
     
     // 퀴즈별 문제 목록 조회
-    public List<QuestionResponseDto> getQuestionsByQuizId(Long quizId) {
+    public List<QuestionResponseDto> getQuestionsByQuiz(Long quizId) {
         List<Question> questions = questionRepository.findByQuizId(quizId);
         return questions.stream()
                 .map(QuestionResponseDto::from)
@@ -100,10 +100,7 @@ public class QuestionService {
                     .orElseThrow(() -> new VocabNotFoundException("단어를 찾을 수 없습니다: " + updateDto.getVocabId()));
             question.setVocab(vocab);
         }
-        // ✅ 선택지 수정
-    if (updateDto.getOptions() != null) {
-        question.setOptions(updateDto.getOptions());
-    }
+        
         return QuestionResponseDto.from(question);
     }
     
@@ -114,21 +111,5 @@ public class QuestionService {
                 .orElseThrow(() -> new QuestionNotFoundException("문제를 찾을 수 없습니다: " + questionId));
         
         questionRepository.delete(question);
-    }
-    
-    // 문제 유형별 조회
-    public List<QuestionResponseDto> getQuestionsByQuizIdAndType(Long quizId, QuestionType type) {
-        List<Question> questions = questionRepository.findByQuizIdAndType(quizId, type);
-        return questions.stream()
-                .map(QuestionResponseDto::from)
-                .collect(Collectors.toList());
-    }
-    
-    // 단어장별 문제 목록 조회 (받아쓰기 문제)
-    public List<QuestionResponseDto> getQuestionsByVocabId(Long vocabId) {
-        List<Question> questions = questionRepository.findByVocabId(vocabId);
-        return questions.stream()
-                .map(QuestionResponseDto::from)
-                .collect(Collectors.toList());
     }
 } 

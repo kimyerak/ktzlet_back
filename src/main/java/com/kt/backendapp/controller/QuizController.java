@@ -33,19 +33,23 @@ public class QuizController {
     }
 
     // 퀴즈 전체 조회
-@GetMapping
-public ResponseEntity<List<QuizResponseDto>> getAllQuizzes() {
-    List<QuizResponseDto> quizzes = quizService.getAllQuizzes();
-    return ResponseEntity.ok(quizzes);
-}
-
-
-
+    @GetMapping
+    public ResponseEntity<List<QuizResponseDto>> getAllQuizzes() {
+        List<QuizResponseDto> quizzes = quizService.getAllQuizzes();
+        return ResponseEntity.ok(quizzes);
+    }
     
     // 퀴즈 목록 조회 (교사용)
     @GetMapping("/teacher/{teacherId}")
     public ResponseEntity<List<QuizResponseDto>> getQuizzesByTeacher(@PathVariable Long teacherId) {
         List<QuizResponseDto> quizzes = quizService.getQuizzesByTeacher(teacherId);
+        return ResponseEntity.ok(quizzes);
+    }
+    
+    // 활성 퀴즈 조회
+    @GetMapping("/active")
+    public ResponseEntity<List<QuizResponseDto>> getActiveQuizzes() {
+        List<QuizResponseDto> quizzes = quizService.getActiveQuizzes();
         return ResponseEntity.ok(quizzes);
     }
     
@@ -72,21 +76,12 @@ public ResponseEntity<List<QuizResponseDto>> getAllQuizzes() {
         return ResponseEntity.noContent().build();
     }
     
-    // 퀴즈 상태 변경 (공개/비공개)
-    @PatchMapping("/{quizId}/status")
-    public ResponseEntity<QuizResponseDto> updateQuizStatus(
-            @PathVariable Long quizId,
-            @RequestParam String status) {
-        QuizResponseDto responseDto = quizService.updateQuizStatus(quizId, status);
-        return ResponseEntity.ok(responseDto);
-    }
-    
     // 퀴즈 제출 (새로운 통합 방식)
     @PostMapping("/{quizId}/submit")
     public ResponseEntity<QuizTakingResponseDto> submitQuiz(
             @PathVariable Long quizId,
             @Valid @RequestBody QuizSubmissionDto submissionDto) {
-        QuizTakingResponseDto response = quizTakingService.submitQuiz(quizId, submissionDto);
+        QuizTakingResponseDto response = quizTakingService.submitQuiz(quizId, submissionDto.getStudentId());
         return ResponseEntity.ok(response);
     }
     

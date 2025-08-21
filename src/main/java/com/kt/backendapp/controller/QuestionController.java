@@ -30,8 +30,8 @@ public class QuestionController {
     
     // 퀴즈별 문제 목록 조회
     @GetMapping("/quiz/{quizId}")
-    public ResponseEntity<List<QuestionResponseDto>> getQuestionsByQuizId(@PathVariable Long quizId) {
-        List<QuestionResponseDto> questions = questionService.getQuestionsByQuizId(quizId);
+    public ResponseEntity<List<QuestionResponseDto>> getQuestionsByQuiz(@PathVariable Long quizId) {
+        List<QuestionResponseDto> questions = questionService.getQuestionsByQuiz(quizId);
         return ResponseEntity.ok(questions);
     }
     
@@ -56,21 +56,5 @@ public class QuestionController {
     public ResponseEntity<Void> deleteQuestion(@PathVariable Long questionId) {
         questionService.deleteQuestion(questionId);
         return ResponseEntity.noContent().build();
-    }
-    
-    // 문제 유형별 조회
-    @GetMapping("/quiz/{quizId}/type/{type}")
-    public ResponseEntity<List<QuestionResponseDto>> getQuestionsByQuizIdAndType(
-            @PathVariable Long quizId,
-            @PathVariable QuestionType type) {
-        List<QuestionResponseDto> questions = questionService.getQuestionsByQuizIdAndType(quizId, type);
-        return ResponseEntity.ok(questions);
-    }
-    
-    // 단어장별 문제 목록 조회 (받아쓰기 문제)
-    @GetMapping("/vocab/{vocabId}")
-    public ResponseEntity<List<QuestionResponseDto>> getQuestionsByVocabId(@PathVariable Long vocabId) {
-        List<QuestionResponseDto> questions = questionService.getQuestionsByVocabId(vocabId);
-        return ResponseEntity.ok(questions);
     }
 } 

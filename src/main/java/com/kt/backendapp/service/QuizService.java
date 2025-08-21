@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class QuizService {
+public class QuizService implements QuizServiceInterface {
     
     private final QuizRepository quizRepository;
     private final TeacherRepository teacherRepository;
@@ -57,9 +57,26 @@ public class QuizService {
     return QuizResponseDto.from(saved);
     }
     
+    // 모든 퀴즈 목록 조회
+    public List<QuizResponseDto> getAllQuizzes() {
+        List<Quiz> quizzes = quizRepository.findAll();
+        return quizzes.stream()
+                .map(QuizResponseDto::from)
+                .collect(Collectors.toList());
+    }
+    
     // 교사별 퀴즈 목록 조회
     public List<QuizResponseDto> getQuizzesByTeacher(Long teacherId) {
         List<Quiz> quizzes = quizRepository.findByCreatedById(teacherId);
+        return quizzes.stream()
+                .map(QuizResponseDto::from)
+                .collect(Collectors.toList());
+    }
+    
+    // 활성 퀴즈 목록 조회
+    public List<QuizResponseDto> getActiveQuizzes() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Quiz> quizzes = quizRepository.findByOpenAtBeforeAndCloseAtAfter(now, now);
         return quizzes.stream()
                 .map(QuizResponseDto::from)
                 .collect(Collectors.toList());
@@ -108,35 +125,4 @@ public class QuizService {
         
         quizRepository.delete(quiz);
     }
-    
-    // 퀴즈 상태 변경
-    @Transactional
-    public QuizResponseDto updateQuizStatus(Long quizId, String status) {
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new QuizNotFoundException("퀴즈를 찾을 수 없습니다: " + quizId));
-        
-        // 상태 변경 로직 (필요에 따라 구현)
-        // 예: 공개/비공개, 활성/비활성 등
-        
-        return QuizResponseDto.from(quiz);
-    }
-    
-    // 활성 퀴즈 목록 조회
-    public List<QuizResponseDto> getActiveQuizzes() {
-        List<Quiz> quizzes = quizRepository.findActiveQuizzes(LocalDateTime.now());
-        return quizzes.stream()
-                .map(QuizResponseDto::from)
-                .collect(Collectors.toList());
-    }
-    
-    // 학생이 응시 가능한 퀴즈 목록 조회
-    public List<QuizResponseDto> getAvailableQuizzesForStudent(Long studentId) {
-        List<Quiz> quizzes = quizRepository.findAvailableQuizzesForStudent(studentId, LocalDateTime.now());
-        return quizzes.stream()
-                .map(QuizResponseDto::from)
-                .collect(Collectors.toList());
-    }
-// 퀴즈 전체 조회 
-public List<QuizResponseDto> getAllQuizzes() { List<Quiz> quizzes = quizRepository.findAll(); return quizzes.stream() .map(QuizResponseDto::from) .collect(Collectors.toList()); }
-    
 } 

@@ -18,6 +18,9 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     @Query("SELECT q FROM Quiz q WHERE q.openAt <= :now AND q.closeAt >= :now")
     List<Quiz> findActiveQuizzes(@Param("now") LocalDateTime now);
     
+    // 활성 퀴즈 목록 조회 (Spring Data JPA 메서드명 규칙)
+    List<Quiz> findByOpenAtBeforeAndCloseAtAfter(LocalDateTime openAt, LocalDateTime closeAt);
+    
     // 학생이 응시 가능한 퀴즈 목록 조회
     @Query("SELECT q FROM Quiz q WHERE q.openAt <= :now AND q.closeAt >= :now " +
            "AND q.id NOT IN (SELECT qps.quiz.id FROM QuizPerStudent qps WHERE qps.student.id = :studentId)")

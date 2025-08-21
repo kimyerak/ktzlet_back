@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class VocabService {
+public class VocabService implements VocabServiceInterface {
     
     private final VocabRepository vocabRepository;
     

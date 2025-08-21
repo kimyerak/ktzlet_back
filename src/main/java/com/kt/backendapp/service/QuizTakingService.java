@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class QuizTakingService {
+public class QuizTakingService implements QuizTakingServiceInterface {
     
     private final QuizPerStudentRepository quizPerStudentRepository;
     private final QuizRepository quizRepository;
@@ -52,7 +52,7 @@ public class QuizTakingService {
                 .collect(Collectors.toList());
     }
     
-    // 퀴즈 시작
+    // 퀴즈 응시 시작
     @Transactional
     public QuizTakingResponseDto startQuiz(Long quizId, Long studentId) {
         // 퀴즈 존재 확인
@@ -95,152 +95,88 @@ public class QuizTakingService {
         return QuizTakingResponseDto.from(savedQuizPerStudent);
     }
     
-    // 문제별 답안 제출 (실시간 채점)
+    // 문제별 답안 제출
     @Transactional
-    public QuestionAnswerResponseDto submitQuestionAnswer(Long questionId, QuestionAnswerDto answerDto) {
+    public QuestionAnswerResponseDto submitAnswer(QuestionAnswerDto answerDto) {
         // 문제 존재 확인
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new IllegalArgumentException("문제를 찾을 수 없습니다: " + questionId));
+        Question question = questionRepository.findById(answerDto.getQuestionId())
+                .orElseThrow(() -> new QuizNotFoundException("문제를 찾을 수 없습니다: " + answerDto.getQuestionId()));
         
         // 학생 존재 확인
         Student student = studentRepository.findById(answerDto.getStudentId())
                 .orElseThrow(() -> new UserNotFoundException("학생을 찾을 수 없습니다: " + answerDto.getStudentId()));
         
+        // 정답 여부 확인
+        boolean isCorrect = question.getCorrectAnswer().equals(answerDto.getAnswer());
+        
         // 기존 답안 조회
         Optional<ResponsePerQuestion> existingResponse = responsePerQuestionRepository
-                .findByStudentIdAndQuestionId(answerDto.getStudentId(), questionId);
+                .findByStudentIdAndQuestionId(answerDto.getStudentId(), answerDto.getQuestionId());
         
-        ResponsePerQuestion responsePerQuestion;
+        ResponsePerQuestion response;
         
         if (existingResponse.isPresent()) {
-            // 기존 답안이 있으면 재시도로 처리
-            responsePerQuestion = existingResponse.get();
-            responsePerQuestion.setRetryAnswer(answerDto.getAnswer());
-            responsePerQuestion.setRetryCount(responsePerQuestion.getRetryCount() + 1);
-            
-            // 재시도 답안 채점
-            boolean retryCorrect = isAnswerCorrect(question, answerDto.getAnswer());
-            responsePerQuestion.setRetryResult(retryCorrect ? "CORRECT" : "INCORRECT");
-            
+            // 기존 답안이 있으면 업데이트
+            response = existingResponse.get();
+            response.setResponse(answerDto.getAnswer());
+            response.setIsCorrect(isCorrect);
         } else {
-            // 새로운 답안 제출
-            boolean isCorrect = isAnswerCorrect(question, answerDto.getAnswer());
-            
-            responsePerQuestion = ResponsePerQuestion.builder()
+            // 새로운 답안 생성
+            response = ResponsePerQuestion.builder()
                     .student(student)
                     .question(question)
                     .response(answerDto.getAnswer())
                     .isCorrect(isCorrect)
-                    .retryCount(0)
                     .build();
         }
         
-        ResponsePerQuestion savedResponse = responsePerQuestionRepository.save(responsePerQuestion);
+        ResponsePerQuestion savedResponse = responsePerQuestionRepository.save(response);
         
-        // 다음 문제 ID 찾기
-        Long nextQuestionId = findNextQuestionId(question.getQuiz().getId(), questionId);
-        
+        // 응답 DTO 생성
         return QuestionAnswerResponseDto.builder()
-                .questionId(questionId)
+                .questionId(answerDto.getQuestionId())
                 .studentId(answerDto.getStudentId())
                 .questionStem(question.getStem())
                 .submittedAnswer(answerDto.getAnswer())
                 .correctAnswer(question.getCorrectAnswer())
-                .isCorrect(responsePerQuestion.getIsCorrect())
-                .points(question.getPoints())
-                .retryAnswer(responsePerQuestion.getRetryAnswer())
-                .retryResult(responsePerQuestion.getRetryResult())
-                .retryCount(responsePerQuestion.getRetryCount())
-                .submittedAt(savedResponse.getCreatedAt())
-                .canRetry(responsePerQuestion.getRetryCount() < 3) // 최대 3번까지 재시도 가능
-                .nextQuestionId(nextQuestionId)
+                .isCorrect(isCorrect)
+                .points(isCorrect ? question.getPoints() : 0)
+                .explanation(question.getExplanation())
+                .submittedAt(LocalDateTime.now())
                 .build();
     }
     
-    // 퀴즈 완료 (최종 제출) - 새로운 통합 방식
+    // 퀴즈 제출 완료
     @Transactional
-    public QuizTakingResponseDto submitQuiz(Long quizId, QuizSubmissionDto submissionDto) {
-        // 먼저 각 답안을 개별적으로 저장
-        for (QuizSubmissionDto.AnswerDto answerDto : submissionDto.getAnswers()) {
-            QuestionAnswerDto questionAnswerDto = new QuestionAnswerDto();
-            questionAnswerDto.setStudentId(submissionDto.getStudentId());
-            questionAnswerDto.setAnswer(answerDto.getAnswer());
-            
-            // 개별 답안 제출 (실시간 채점)
-            submitQuestionAnswer(answerDto.getQuestionId(), questionAnswerDto);
-        }
-        
-        // 퀴즈 완료 처리
-        return completeQuiz(quizId, submissionDto.getStudentId());
-    }
-    
-    // 퀴즈 완료 (최종 제출)
-    @Transactional
-    public QuizTakingResponseDto completeQuiz(Long quizId, Long studentId) {
+    public QuizTakingResponseDto submitQuiz(Long quizId, Long studentId) {
         // 퀴즈 응시 기록 조회
         QuizPerStudent quizPerStudent = quizPerStudentRepository.findById_QuizIdAndId_StudentId(quizId, studentId)
-                .orElseThrow(() -> new IllegalStateException("퀴즈 응시 기록을 찾을 수 없습니다."));
+                .orElseThrow(() -> new QuizNotFoundException("퀴즈 응시 기록을 찾을 수 없습니다"));
         
-        // 학생의 답안들 조회
-        List<ResponsePerQuestion> responses = responsePerQuestionRepository
-                .findByStudentIdAndQuizId(studentId, quizId);
+        // 총점 계산
+        List<ResponsePerQuestion> responses = responsePerQuestionRepository.findByStudentId(studentId);
+        int totalScore = responses.stream()
+                .filter(ResponsePerQuestion::getIsCorrect)
+                .mapToInt(response -> response.getQuestion().getPoints())
+                .sum();
         
-        // 학생의 총점
-int totalScore = responses.stream()
-        .mapToInt(response -> response.getIsCorrect() ? 
-            (response.getQuestion().getPoints() != null ? response.getQuestion().getPoints() : 0) 
-            : 0)
-        .sum();
-
-// 퀴즈의 최대점수
-int maxScore = responses.stream()
-        .mapToInt(r -> r.getQuestion().getPoints() != null ? r.getQuestion().getPoints() : 0)
-        .sum();
-
-// 100점 만점 환산 점수
-int percentageScore = (int) Math.round((double) totalScore / maxScore * 100);
-
-// 합격 여부 판정 (targetScore를 % 기준으로 저장했다고 가정)
-boolean pass = quizPerStudent.getQuiz().getTargetScore() == null || 
-               percentageScore >= quizPerStudent.getQuiz().getTargetScore();
-
-// 저장
-quizPerStudent.setSubmittedAt(LocalDateTime.now());
-quizPerStudent.setTotalScore(percentageScore); // 👈 퍼센트 점수 저장
-quizPerStudent.setPass(pass);
-quizPerStudent.setStatus(QuizPerStudentStatus.SUBMITTED);
-
+        // 합격 여부 확인
+        boolean pass = totalScore >= quizPerStudent.getQuiz().getTargetScore();
+        
+        // 퀴즈 응시 기록 업데이트
+        quizPerStudent.setSubmittedAt(LocalDateTime.now());
+        quizPerStudent.setTotalScore(totalScore);
+        quizPerStudent.setPass(pass);
+        quizPerStudent.setStatus(QuizPerStudentStatus.SUBMITTED);
         
         QuizPerStudent savedQuizPerStudent = quizPerStudentRepository.save(quizPerStudent);
-        
         return QuizTakingResponseDto.from(savedQuizPerStudent);
     }
     
-    // 다음 문제 ID 찾기
-    private Long findNextQuestionId(Long quizId, Long currentQuestionId) {
-        List<Question> questions = questionRepository.findByQuizId(quizId);
-        for (int i = 0; i < questions.size(); i++) {
-            if (questions.get(i).getId().equals(currentQuestionId) && i + 1 < questions.size()) {
-                return questions.get(i + 1).getId();
-            }
-        }
-        return null; // 마지막 문제인 경우
-    }
-    
-    // 답안 정답 여부 판정
-    private boolean isAnswerCorrect(Question question, String studentAnswer) {
-        if (studentAnswer == null || studentAnswer.trim().isEmpty()) {
-            return false;
-        }
-        
-        String correctAnswer = question.getCorrectAnswer();
-        return studentAnswer.trim().equalsIgnoreCase(correctAnswer.trim());
-    }
-    
-    // 학생 성적 히스토리 조회
-    public List<QuizTakingResponseDto> getStudentHistory(Long studentId) {
-        List<QuizPerStudent> history = quizPerStudentRepository.findRecentQuizzesByStudentId(studentId);
-        return history.stream()
+    // 학생의 퀴즈 응시 결과 조회
+    public List<QuizTakingResponseDto> getQuizResults(Long studentId) {
+        List<QuizPerStudent> quizResults = quizPerStudentRepository.findById_StudentId(studentId);
+        return quizResults.stream()
                 .map(QuizTakingResponseDto::from)
                 .collect(Collectors.toList());
     }
@@ -248,19 +184,7 @@ quizPerStudent.setStatus(QuizPerStudentStatus.SUBMITTED);
     // 특정 퀴즈 응시 결과 조회
     public QuizTakingResponseDto getQuizResult(Long quizId, Long studentId) {
         QuizPerStudent quizPerStudent = quizPerStudentRepository.findById_QuizIdAndId_StudentId(quizId, studentId)
-                .orElseThrow(() -> new IllegalStateException("퀴즈 응시 기록을 찾을 수 없습니다."));
-        
+                .orElseThrow(() -> new QuizNotFoundException("퀴즈 응시 기록을 찾을 수 없습니다"));
         return QuizTakingResponseDto.from(quizPerStudent);
     }
-    //완료한퀴즈만 조회
-    public List<QuizTakingResponseDto> getCompletedQuizzes(Long studentId) {
-        List<QuizPerStudent> records = quizPerStudentRepository.findById_StudentIdAndStatus(
-                studentId,
-                QuizPerStudentStatus.SUBMITTED   // enum 사용
-        );
-        return records.stream()
-                      .map(QuizTakingResponseDto::from)
-                      .collect(Collectors.toList());
-    }
-
 } 

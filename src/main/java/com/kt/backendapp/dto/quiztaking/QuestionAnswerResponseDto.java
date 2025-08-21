@@ -16,6 +16,7 @@ public class QuestionAnswerResponseDto {
     private String correctAnswer;
     private Boolean isCorrect;
     private Integer points;
+    private String explanation;
     private String retryAnswer;
     private String retryResult;
     private Integer retryCount;
