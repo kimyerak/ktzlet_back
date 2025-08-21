@@ -1,4 +1,5 @@
 # 🎯 영어학습 플랫폼 백엔드 API
+<img width="802" height="741" alt="최종 drawio (1)" src="https://github.com/user-attachments/assets/065ccfce-f226-4420-bc30-26eac7f14cf5" />
 
 ## 📋 프로젝트 개요
 
