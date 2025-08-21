@@ -29,4 +29,5 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     // 특정 기간 내 퀴즈 목록 조회
     @Query("SELECT q FROM Quiz q WHERE q.createdAt BETWEEN :startDate AND :endDate")
     List<Quiz> findByCreatedAtBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    
 } 

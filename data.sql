@@ -1,18 +1,83 @@
--- 초기 유저 추가
-INSERT INTO users (email, password, name, status) 
-VALUES ('admin@test.com', '1234', '관리자', 'active');
+-- USERS (학생 등록)
+INSERT INTO users (id, email, password, name, user_type, status, created_at, updated_at) VALUES
+(1, 'student1@kt.com',  '0000', '온유민',   'student', 'active', NOW(), NOW()),
+(2, 'student2@kt.com',  '0000', '유준선',   'student', 'active', NOW(), NOW()),
+(3, 'student3@kt.com',  '0000', '유진규',   'student', 'active', NOW(), NOW()),
+(4, 'student4@kt.com',  '0000', '윤지원',   'student', 'active', NOW(), NOW()),
+(5, 'student5@kt.com',  '0000', '이강우',   'student', 'active', NOW(), NOW()),
+(6, 'student6@kt.com',  '0000', '이성무',   'student', 'active', NOW(), NOW()),
+(7, 'student7@kt.com',  '0000', '이지민',   'student', 'active', NOW(), NOW()),
+(8, 'student8@kt.com',  '0000', '임태규',   'student', 'active', NOW(), NOW()),
+(9, 'student9@kt.com',  '0000', '장새영',   'student', 'active', NOW(), NOW()),
+(10, 'student10@kt.com', '0000', '장현우',   'student', 'active', NOW(), NOW()),
+(11, 'student11@kt.com', '0000', '정수영',   'student', 'active', NOW(), NOW()),
+(12, 'student12@kt.com', '0000', '조예진',   'student', 'active', NOW(), NOW()),
+(13, 'student13@kt.com', '0000', '조윤영',   'student', 'active', NOW(), NOW()),
+(14, 'student14@kt.com', '0000', '하창형',   'student', 'active', NOW(), NOW()),
+(15, 'student15@kt.com', '0000', '하태균',   'student', 'active', NOW(), NOW()),
+(16, 'student16@kt.com', '0000', '허은세',   'student', 'active', NOW(), NOW()),
+(17, 'student17@kt.com', '0000', '황현지',   'student', 'active', NOW(), NOW()),
+(18, 'student18@kt.com', '0000', '김민우',   'student', 'active', NOW(), NOW()),
+(19, 'student19@kt.com', '0000', '강수민',   'student', 'active', NOW(), NOW()),
+(20, 'student20@kt.com', '0000', '길가은',   'student', 'active', NOW(), NOW()),
+(21, 'student21@kt.com', '0000', '길현준',   'student', 'active', NOW(), NOW()),
+(22, 'student22@kt.com', '0000', '김나영',   'student', 'active', NOW(), NOW()),
+(23, 'student23@kt.com', '0000', '김대희',   'student', 'active', NOW(), NOW()),
+(24, 'student24@kt.com', '0000', '김성연',   'student', 'active', NOW(), NOW()),
+(25, 'student25@kt.com', '0000', '김성호',   'student', 'active', NOW(), NOW()),
+(26, 'student26@kt.com', '0000', '김예락',   'student', 'active', NOW(), NOW()),
+(27, 'student27@kt.com', '0000', '김예은',   'student', 'active', NOW(), NOW()),
+(28, 'student28@kt.com', '0000', '김인효',   'student', 'active', NOW(), NOW()),
+(29, 'student29@kt.com', '0000', '김지우',   'student', 'active', NOW(), NOW()),
+(30, 'student30@kt.com', '0000', '김하늘',   'student', 'active', NOW(), NOW()),
+(31, 'student31@kt.com', '0000', '김혜지',   'student', 'active', NOW(), NOW()),
+(32, 'student32@kt.com', '0000', '박민수',   'student', 'active', NOW(), NOW()),
+(33, 'student33@kt.com', '0000', '박지민',   'student', 'active', NOW(), NOW()),
+(34, 'student34@kt.com', '0000', '박희원',   'student', 'active', NOW(), NOW()),
+(35, 'student35@kt.com', '0000', '서영홍',   'student', 'active', NOW(), NOW()),
+(36, 'student36@kt.com', '0000', '송하림',   'student', 'active', NOW(), NOW()),
+(37, 'student37@kt.com', '0000', '신보람',   'student', 'active', NOW(), NOW()),
+(38, 'student38@kt.com', '0000', '안동현',   'student', 'active', NOW(), NOW()),
+(39, 'student39@kt.com', '0000', '양예준',   'student', 'active', NOW(), NOW());
 
--- 기본 단어장 데이터
-INSERT INTO vocab (word, definition) 
-VALUES ('apple', '사과'),
-       ('banana', '바나나'),
-       ('cat', '고양이');
-
--- 테스트용 퀴즈 추가
-INSERT INTO quiz (title, num_of_question, created_by) 
-VALUES ('기본 영어 단어 퀴즈', 2, 1);
-
--- 문제 추가
-INSERT INTO question (quiz_id, vocab_id, stem, type, correct_answer, points, explanation)
-VALUES (1, 1, '사과를 영어로 쓰세요', '주관식', 'apple', 1, 'apple은 사과입니다.'),
-       (1, 2, '바나나를 영어로 쓰세요', '주관식', 'banana', 1, 'banana는 바나나입니다.');
+-- STUDENT (users.id 참조, level 랜덤 A/B/C)
+INSERT INTO student (id, level, created_at, updated_at) VALUES
+(1,  'A', NOW(), NOW()),
+(2,  'B', NOW(), NOW()),
+(3,  'C', NOW(), NOW()),
+(4,  'A', NOW(), NOW()),
+(5,  'B', NOW(), NOW()),
+(6,  'C', NOW(), NOW()),
+(7,  'A', NOW(), NOW()),
+(8,  'B', NOW(), NOW()),
+(9,  'C', NOW(), NOW()),
+(10, 'A', NOW(), NOW()),
+(11, 'B', NOW(), NOW()),
+(12, 'C', NOW(), NOW()),
+(13, 'A', NOW(), NOW()),
+(14, 'B', NOW(), NOW()),
+(15, 'C', NOW(), NOW()),
+(16, 'A', NOW(), NOW()),
+(17, 'B', NOW(), NOW()),
+(18, 'C', NOW(), NOW()),
+(19, 'A', NOW(), NOW()),
+(20, 'B', NOW(), NOW()),
+(21, 'C', NOW(), NOW()),
+(22, 'A', NOW(), NOW()),
+(23, 'B', NOW(), NOW()),
+(24, 'C', NOW(), NOW()),
+(25, 'A', NOW(), NOW()),
+(26, 'B', NOW(), NOW()),
+(27, 'C', NOW(), NOW()),
+(28, 'A', NOW(), NOW()),
+(29, 'B', NOW(), NOW()),
+(30, 'C', NOW(), NOW()),
+(31, 'A', NOW(), NOW()),
+(32, 'B', NOW(), NOW()),
+(33, 'C', NOW(), NOW()),
+(34, 'A', NOW(), NOW()),
+(35, 'B', NOW(), NOW()),
+(36, 'C', NOW(), NOW()),
+(37, 'A', NOW(), NOW()),
+(38, 'B', NOW(), NOW()),
+(39, 'C', NOW(), NOW());

@@ -50,6 +50,6 @@ public class QuizCreateDto {
         
         private String explanation;
         private Integer points;
-        private Long vocabId; // 받아쓰기 문제의 경우
+        private List<Long> vocabIds; 
     }
 } 

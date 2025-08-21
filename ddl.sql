@@ -4,7 +4,7 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     name VARCHAR(100) NOT NULL,
-    user_type VARCHAR(20) NOT NULL,
+    user_type VARCHAR(20) NOT NULL, --student, teacher
     status VARCHAR(20) NOT NULL, -- active, inactive, suspended
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -52,7 +52,7 @@ CREATE TABLE question (
     quiz_id BIGINT NOT NULL REFERENCES quiz(id) ON DELETE CASCADE,
     vocab_id BIGINT NOT NULL REFERENCES vocab(id),
     stem TEXT,
-    type VARCHAR(50), -- OX, short, etc
+    type VARCHAR(50), -- OX, multiple, dictation
     correct_answer VARCHAR(255) NOT NULL,
     points INT DEFAULT 1, -- 문제별 배점 (기본 1점)
     explanation TEXT,     -- 문제 해설

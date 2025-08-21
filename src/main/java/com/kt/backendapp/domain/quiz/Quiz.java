@@ -8,8 +8,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
 import java.util.ArrayList;
-
+import java.util.HashSet;
 import java.time.LocalDateTime;
+import java.util.Set;  
 
 @Entity
 @Table(name = "quiz", indexes = {
@@ -50,10 +51,11 @@ public class Quiz extends BaseTimeEntity {
 
     // ✅ 단어장 리스트 (N:M)
     @ManyToMany
-    @JoinTable(
-        name = "quiz_vocab",
-        joinColumns = @JoinColumn(name = "quiz_id"),
-        inverseJoinColumns = @JoinColumn(name = "vocab_id")
-    )
-    private List<Vocab> vocabs = new ArrayList<>();
+@JoinTable(
+    name = "quiz_vocab",
+    joinColumns = @JoinColumn(name = "quiz_id"),
+    inverseJoinColumns = @JoinColumn(name = "vocab_id")
+)
+private Set<Vocab> vocabs = new HashSet<>();
+
 }

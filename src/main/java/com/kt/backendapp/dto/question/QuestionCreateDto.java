@@ -1,5 +1,7 @@
 package com.kt.backendapp.dto.question;
 
+import java.util.List;
+
 import com.kt.backendapp.domain.question.QuestionType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,5 +28,7 @@ public class QuestionCreateDto {
     
     private Integer points;
     
-    private Long vocabId; // 받아쓰기 문제의 경우
+    private Long vocabId; 
+    // ✅ 객관식일 경우만 사용
+    private List<String> options; 
 } 

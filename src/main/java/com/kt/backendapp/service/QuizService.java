@@ -4,6 +4,8 @@ import com.kt.backendapp.domain.quiz.Quiz;
 import com.kt.backendapp.domain.quiz.QuizRepository;
 import com.kt.backendapp.domain.user.Teacher;
 import com.kt.backendapp.domain.user.TeacherRepository;
+import com.kt.backendapp.domain.vocab.Vocab;
+import com.kt.backendapp.domain.vocab.VocabRepository;
 import com.kt.backendapp.dto.quiz.QuizCreateDto;
 import com.kt.backendapp.dto.quiz.QuizResponseDto;
 import com.kt.backendapp.dto.quiz.QuizUpdateDto;
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +27,7 @@ public class QuizService {
     
     private final QuizRepository quizRepository;
     private final TeacherRepository teacherRepository;
+    private final VocabRepository vocabRepository;
     
     // 퀴즈 생성
     @Transactional
@@ -42,8 +46,15 @@ public class QuizService {
                 .createdBy(teacher)
                 .build();
         
-        Quiz savedQuiz = quizRepository.save(quiz);
-        return QuizResponseDto.from(savedQuiz);
+        // ✅ vocabIds 처리
+    if (createDto.getVocabIds() != null && !createDto.getVocabIds().isEmpty()) {
+        Set<Vocab> vocabs = vocabRepository.findAllById(createDto.getVocabIds())
+                .stream().collect(Collectors.toSet());
+        quiz.setVocabs(vocabs);
+    }
+
+    Quiz saved = quizRepository.save(quiz);
+    return QuizResponseDto.from(saved);
     }
     
     // 교사별 퀴즈 목록 조회
@@ -125,15 +136,7 @@ public class QuizService {
                 .map(QuizResponseDto::from)
                 .collect(Collectors.toList());
     }
-
-    // QuizService.java
-
-// 퀴즈 전체 조회
-public List<QuizResponseDto> getAllQuizzes() {
-    List<Quiz> quizzes = quizRepository.findAll();
-    return quizzes.stream()
-            .map(QuizResponseDto::from)
-            .collect(Collectors.toList());
-}
-
+// 퀴즈 전체 조회 
+public List<QuizResponseDto> getAllQuizzes() { List<Quiz> quizzes = quizRepository.findAll(); return quizzes.stream() .map(QuizResponseDto::from) .collect(Collectors.toList()); }
+    
 } 

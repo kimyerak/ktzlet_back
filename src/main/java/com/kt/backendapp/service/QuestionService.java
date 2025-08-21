@@ -50,6 +50,8 @@ public class QuestionService {
                 .correctAnswer(createDto.getCorrectAnswer())
                 .explanation(createDto.getExplanation())
                 .points(createDto.getPoints())
+                // ✅ 선택지 저장
+            .options(createDto.getOptions())
                 .vocab(vocab)
                 .build();
         
@@ -98,7 +100,10 @@ public class QuestionService {
                     .orElseThrow(() -> new VocabNotFoundException("단어를 찾을 수 없습니다: " + updateDto.getVocabId()));
             question.setVocab(vocab);
         }
-        
+        // ✅ 선택지 수정
+    if (updateDto.getOptions() != null) {
+        question.setOptions(updateDto.getOptions());
+    }
         return QuestionResponseDto.from(question);
     }
     

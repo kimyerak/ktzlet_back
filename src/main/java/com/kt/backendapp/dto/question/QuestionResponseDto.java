@@ -5,12 +5,13 @@ import com.kt.backendapp.domain.question.QuestionType;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
 public class QuestionResponseDto {
-    
+
     private Long id;
     private Long quizId;
     private QuestionType type;
@@ -21,7 +22,10 @@ public class QuestionResponseDto {
     private Long vocabId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
+
+    // ✅ 추가
+    private List<String> options;
+
     public static QuestionResponseDto from(Question question) {
         return QuestionResponseDto.builder()
                 .id(question.getId())
@@ -34,6 +38,8 @@ public class QuestionResponseDto {
                 .vocabId(question.getVocab() != null ? question.getVocab().getId() : null)
                 .createdAt(question.getCreatedAt())
                 .updatedAt(question.getUpdatedAt())
+                // ✅ 추가
+                .options(question.getOptions())
                 .build();
     }
-} 
+}
