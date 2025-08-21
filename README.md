@@ -332,16 +332,3 @@ curl -X POST http://localhost:8080/api/users/register \
 - 데이터베이스 인덱스 최적화
 - API 응답 속도 개선
 
-## 👥 팀원
-
-- **Backend Developer**: [이름]
-- **Frontend Developer**: [이름]
-- **Project Manager**: [이름]
-
-## 📄 라이선스
-
-이 프로젝트는 MIT 라이선스 하에 배포됩니다.
-
----
-
-**English Learning Platform Backend API** 🎓
