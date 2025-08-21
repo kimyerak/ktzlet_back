@@ -9,8 +9,8 @@ import com.kt.backendapp.domain.quiz.QuizPerStudentStatus;
 import com.kt.backendapp.domain.quiz.QuizRepository;
 import com.kt.backendapp.domain.quiz.ResponsePerQuestion;
 import com.kt.backendapp.domain.quiz.ResponsePerQuestionRepository;
-import com.kt.backendapp.domain.user.User;
-import com.kt.backendapp.domain.user.UserRepository;
+import com.kt.backendapp.domain.user.Student;
+import com.kt.backendapp.domain.user.StudentRepository;
 import com.kt.backendapp.dto.quiztaking.QuizTakingDto;
 import com.kt.backendapp.dto.quiztaking.QuizTakingResponseDto;
 import com.kt.backendapp.dto.quiztaking.QuestionAnswerDto;
@@ -33,26 +33,21 @@ public class QuizTakingService {
     
     private final QuizPerStudentRepository quizPerStudentRepository;
     private final QuizRepository quizRepository;
-    private final UserRepository userRepository;
+    private final StudentRepository studentRepository;
     private final QuestionRepository questionRepository;
     private final ResponsePerQuestionRepository responsePerQuestionRepository;
     
     // 학생이 응시 가능한 퀴즈 목록 조회
     public List<QuizTakingResponseDto> getAvailableQuizzes(Long studentId) {
         // 학생 존재 확인
-        User student = userRepository.findById(studentId)
+        Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new UserNotFoundException("학생을 찾을 수 없습니다: " + studentId));
         
         // 현재 시간 기준으로 활성 퀴즈 조회
         List<Quiz> availableQuizzes = quizRepository.findAvailableQuizzesForStudent(studentId, LocalDateTime.now());
         
         return availableQuizzes.stream()
-                .map(quiz -> QuizTakingResponseDto.builder()
-                        .quizId(quiz.getId())
-                        .quizTitle(quiz.getTitle())
-                        .studentId(studentId)
-                        .studentName(student.getName())
-                        .build())
+                .map(quiz -> QuizTakingResponseDto.fromQuiz(quiz, studentId, student.getUser().getName()))
                 .collect(Collectors.toList());
     }
     
@@ -64,27 +59,36 @@ public class QuizTakingService {
                 .orElseThrow(() -> new QuizNotFoundException("퀴즈를 찾을 수 없습니다: " + quizId));
         
         // 학생 존재 확인
-        User student = userRepository.findById(studentId)
+        Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new UserNotFoundException("학생을 찾을 수 없습니다: " + studentId));
         
-        // 이미 응시한 퀴즈인지 확인
-        quizPerStudentRepository.findById_QuizIdAndId_StudentId(quizId, studentId)
-                .ifPresent(qps -> {
-                    throw new IllegalStateException("이미 응시한 퀴즈입니다.");
-                });
+        // 기존 응시 기록 조회
+        Optional<QuizPerStudent> existingQuizPerStudent = quizPerStudentRepository.findById_QuizIdAndId_StudentId(quizId, studentId);
         
-        // 퀴즈 응시 기록 생성 (복합 PK 사용)
-        QuizPerStudent.QuizPerStudentId id = new QuizPerStudent.QuizPerStudentId();
-        id.setQuizId(quizId);
-        id.setStudentId(studentId);
+        QuizPerStudent quizPerStudent;
         
-        QuizPerStudent quizPerStudent = QuizPerStudent.builder()
-                .id(id)
-                .quiz(quiz)
-                .student(student)
-                .startedAt(LocalDateTime.now())
-                .status(QuizPerStudentStatus.IN_PROGRESS)
-                .build();
+        if (existingQuizPerStudent.isPresent()) {
+            // 기존 기록이 있으면 상태만 업데이트
+            quizPerStudent = existingQuizPerStudent.get();
+            quizPerStudent.setStartedAt(LocalDateTime.now());
+            quizPerStudent.setStatus(QuizPerStudentStatus.IN_PROGRESS);
+            quizPerStudent.setSubmittedAt(null);
+            quizPerStudent.setTotalScore(null);
+            quizPerStudent.setPass(null);
+        } else {
+            // 새로운 응시 기록 생성
+            QuizPerStudent.QuizPerStudentId id = new QuizPerStudent.QuizPerStudentId();
+            id.setQuizId(quizId);
+            id.setStudentId(studentId);
+            
+            quizPerStudent = QuizPerStudent.builder()
+                    .id(id)
+                    .quiz(quiz)
+                    .student(student)
+                    .startedAt(LocalDateTime.now())
+                    .status(QuizPerStudentStatus.IN_PROGRESS)
+                    .build();
+        }
         
         QuizPerStudent savedQuizPerStudent = quizPerStudentRepository.save(quizPerStudent);
         return QuizTakingResponseDto.from(savedQuizPerStudent);
@@ -98,7 +102,7 @@ public class QuizTakingService {
                 .orElseThrow(() -> new IllegalArgumentException("문제를 찾을 수 없습니다: " + questionId));
         
         // 학생 존재 확인
-        User student = userRepository.findById(answerDto.getStudentId())
+        Student student = studentRepository.findById(answerDto.getStudentId())
                 .orElseThrow(() -> new UserNotFoundException("학생을 찾을 수 없습니다: " + answerDto.getStudentId()));
         
         // 기존 답안 조회
@@ -163,25 +167,31 @@ public class QuizTakingService {
         List<ResponsePerQuestion> responses = responsePerQuestionRepository
                 .findByStudentIdAndQuizId(studentId, quizId);
         
-        // 총점 계산
-        int totalScore = responses.stream()
-                .mapToInt(response -> {
-                    if (response.getIsCorrect()) {
-                        return response.getQuestion().getPoints() != null ? response.getQuestion().getPoints() : 0;
-                    }
-                    return 0;
-                })
-                .sum();
-        
-        // 합격 여부 판정 (targetScore가 null이면 항상 합격)
-        boolean pass = quizPerStudent.getQuiz().getTargetScore() == null || 
-                      totalScore >= quizPerStudent.getQuiz().getTargetScore();
-        
-        // 퀴즈 응시 기록 업데이트
-        quizPerStudent.setSubmittedAt(LocalDateTime.now());
-        quizPerStudent.setTotalScore(totalScore);
-        quizPerStudent.setPass(pass);
-        quizPerStudent.setStatus(QuizPerStudentStatus.SUBMITTED);
+        // 학생의 총점
+int totalScore = responses.stream()
+        .mapToInt(response -> response.getIsCorrect() ? 
+            (response.getQuestion().getPoints() != null ? response.getQuestion().getPoints() : 0) 
+            : 0)
+        .sum();
+
+// 퀴즈의 최대점수
+int maxScore = responses.stream()
+        .mapToInt(r -> r.getQuestion().getPoints() != null ? r.getQuestion().getPoints() : 0)
+        .sum();
+
+// 100점 만점 환산 점수
+int percentageScore = (int) Math.round((double) totalScore / maxScore * 100);
+
+// 합격 여부 판정 (targetScore를 % 기준으로 저장했다고 가정)
+boolean pass = quizPerStudent.getQuiz().getTargetScore() == null || 
+               percentageScore >= quizPerStudent.getQuiz().getTargetScore();
+
+// 저장
+quizPerStudent.setSubmittedAt(LocalDateTime.now());
+quizPerStudent.setTotalScore(percentageScore); // 👈 퍼센트 점수 저장
+quizPerStudent.setPass(pass);
+quizPerStudent.setStatus(QuizPerStudentStatus.SUBMITTED);
+
         
         QuizPerStudent savedQuizPerStudent = quizPerStudentRepository.save(quizPerStudent);
         
@@ -224,4 +234,15 @@ public class QuizTakingService {
         
         return QuizTakingResponseDto.from(quizPerStudent);
     }
+    //완료한퀴즈만 조회
+    public List<QuizTakingResponseDto> getCompletedQuizzes(Long studentId) {
+        List<QuizPerStudent> records = quizPerStudentRepository.findById_StudentIdAndStatus(
+                studentId,
+                QuizPerStudentStatus.SUBMITTED   // enum 사용
+        );
+        return records.stream()
+                      .map(QuizTakingResponseDto::from)
+                      .collect(Collectors.toList());
+    }
+
 } 

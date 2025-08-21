@@ -20,13 +20,6 @@ public class QuestionController {
     
     private final QuestionService questionService;
     
-    // 전체 문제 목록 조회
-    @GetMapping
-    public ResponseEntity<List<QuestionResponseDto>> getAllQuestions() {
-        List<QuestionResponseDto> questions = questionService.getAllQuestions();
-        return ResponseEntity.ok(questions);
-    }
-    
     // 문제 생성
     @PostMapping
     public ResponseEntity<QuestionResponseDto> createQuestion(

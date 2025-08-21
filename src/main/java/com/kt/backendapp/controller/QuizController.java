@@ -3,6 +3,7 @@ package com.kt.backendapp.controller;
 import com.kt.backendapp.dto.quiz.QuizCreateDto;
 import com.kt.backendapp.dto.quiz.QuizResponseDto;
 import com.kt.backendapp.dto.quiz.QuizUpdateDto;
+import com.kt.backendapp.dto.quiztaking.QuizTakingResponseDto;
 import com.kt.backendapp.service.QuizService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,16 @@ public class QuizController {
         QuizResponseDto responseDto = quizService.createQuiz(createDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
+
+    // 퀴즈 전체 조회
+@GetMapping
+public ResponseEntity<List<QuizResponseDto>> getAllQuizzes() {
+    List<QuizResponseDto> quizzes = quizService.getAllQuizzes();
+    return ResponseEntity.ok(quizzes);
+}
+
+
+
     
     // 퀴즈 목록 조회 (교사용)
     @GetMapping("/teacher/{teacherId}")

@@ -1,6 +1,7 @@
 package com.kt.backendapp.controller;
 
 import com.kt.backendapp.dto.quiztaking.QuizTakingResponseDto;
+
 import com.kt.backendapp.dto.quiztaking.QuestionAnswerDto;
 import com.kt.backendapp.dto.quiztaking.QuestionAnswerResponseDto;
 import com.kt.backendapp.service.QuizTakingService;
@@ -67,4 +68,10 @@ public class QuizTakingController {
         QuizTakingResponseDto result = quizTakingService.getQuizResult(quizId, studentId);
         return ResponseEntity.ok(result);
     }
+    // 이미 완료한 퀴즈만 조회
+@GetMapping("/completed/{studentId}")
+public ResponseEntity<List<QuizTakingResponseDto>> getCompletedQuizzes(@PathVariable Long studentId) {
+    List<QuizTakingResponseDto> completed = quizTakingService.getCompletedQuizzes(studentId);
+    return ResponseEntity.ok(completed);
+}
 } 

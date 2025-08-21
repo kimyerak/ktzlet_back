@@ -2,7 +2,7 @@ package com.kt.backendapp.domain.quiz;
 
 import com.kt.backendapp.domain.common.BaseTimeEntity;
 import com.kt.backendapp.domain.question.Question;
-import com.kt.backendapp.domain.user.User;
+import com.kt.backendapp.domain.user.Student;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,7 +17,7 @@ public class ResponsePerQuestion extends BaseTimeEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
-    private User student; // role=student
+    private Student student; // role=student
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")

@@ -29,14 +29,6 @@ public class QuestionService {
     private final QuizRepository quizRepository;
     private final VocabRepository vocabRepository;
     
-    // 전체 문제 목록 조회
-    public List<QuestionResponseDto> getAllQuestions() {
-        List<Question> questions = questionRepository.findAll();
-        return questions.stream()
-                .map(QuestionResponseDto::from)
-                .collect(Collectors.toList());
-    }
-    
     // 문제 생성
     @Transactional
     public QuestionResponseDto createQuestion(QuestionCreateDto createDto) {

@@ -19,6 +19,7 @@ public interface QuizPerStudentRepository extends JpaRepository<QuizPerStudent, 
     // 퀴즈별 응시 학생 목록 조회
     List<QuizPerStudent> findById_QuizId(Long quizId);
     
+    
     // 특정 학생의 특정 퀴즈 응시 기록 조회
     Optional<QuizPerStudent> findById_QuizIdAndId_StudentId(Long quizId, Long studentId);
     

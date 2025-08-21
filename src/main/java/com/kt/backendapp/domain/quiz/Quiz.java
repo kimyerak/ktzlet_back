@@ -1,9 +1,13 @@
 package com.kt.backendapp.domain.quiz;
 
 import com.kt.backendapp.domain.common.BaseTimeEntity;
-import com.kt.backendapp.domain.user.User;
+import com.kt.backendapp.domain.user.Teacher;
+import com.kt.backendapp.domain.question.Question;
+import com.kt.backendapp.domain.vocab.Vocab;  
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.List;
+import java.util.ArrayList;
 
 import java.time.LocalDateTime;
 
@@ -38,5 +42,18 @@ public class Quiz extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
-    private User createdBy; // teacher FK
+    private Teacher createdBy; // teacher FK
+
+    // ✅ 문제 리스트 (1:N)
+    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Question> questions = new ArrayList<>();
+
+    // ✅ 단어장 리스트 (N:M)
+    @ManyToMany
+    @JoinTable(
+        name = "quiz_vocab",
+        joinColumns = @JoinColumn(name = "quiz_id"),
+        inverseJoinColumns = @JoinColumn(name = "vocab_id")
+    )
+    private List<Vocab> vocabs = new ArrayList<>();
 }

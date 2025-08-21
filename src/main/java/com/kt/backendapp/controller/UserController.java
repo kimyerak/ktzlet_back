@@ -1,9 +1,9 @@
 package com.kt.backendapp.controller;
 
-import com.kt.backendapp.domain.user.UserRole;
 import com.kt.backendapp.dto.user.UserRequestDto;
 import com.kt.backendapp.dto.user.UserResponseDto;
 import com.kt.backendapp.dto.user.UserUpdateDto;
+import com.kt.backendapp.dto.user.UserRegistrationDto;
 import com.kt.backendapp.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +20,17 @@ public class UserController {
     
     private final UserService userService;
     
+    // 사용자 가입 (Student 또는 Teacher)
+    @PostMapping("/register")
+    public ResponseEntity<UserResponseDto> registerUser(
+            @RequestBody UserRegistrationDto registrationDto) {
+        UserResponseDto responseDto = userService.registerUser(registrationDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+    }
+    
     @PostMapping
     public ResponseEntity<UserResponseDto> createUser(
-            @Valid @RequestBody UserRequestDto requestDto) {
+            @RequestBody UserRequestDto requestDto) {
         UserResponseDto responseDto = userService.createUser(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
@@ -33,8 +41,8 @@ public class UserController {
         return ResponseEntity.ok(responseDto);
     }
     
-    @GetMapping("/email/{email}")
-    public ResponseEntity<UserResponseDto> getUserByEmail(@PathVariable String email) {
+    @GetMapping("/email")
+    public ResponseEntity<UserResponseDto> getUserByEmail(@RequestParam String email) {
         UserResponseDto responseDto = userService.getUserByEmail(email);
         return ResponseEntity.ok(responseDto);
     }
@@ -45,28 +53,10 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
     
-    @GetMapping("/role/{role}")
-    public ResponseEntity<List<UserResponseDto>> getUsersByRole(@PathVariable UserRole role) {
-        List<UserResponseDto> users = userService.getUsersByRole(role);
-        return ResponseEntity.ok(users);
-    }
-    
-    @GetMapping("/students/active")
-    public ResponseEntity<List<UserResponseDto>> getActiveStudents() {
-        List<UserResponseDto> students = userService.getActiveStudents();
-        return ResponseEntity.ok(students);
-    }
-    
-    @GetMapping("/teachers/active")
-    public ResponseEntity<List<UserResponseDto>> getActiveTeachers() {
-        List<UserResponseDto> teachers = userService.getActiveTeachers();
-        return ResponseEntity.ok(teachers);
-    }
-    
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDto> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody UserUpdateDto updateDto) {
+            @RequestBody UserUpdateDto updateDto) {
         UserResponseDto responseDto = userService.updateUser(id, updateDto);
         return ResponseEntity.ok(responseDto);
     }
@@ -75,5 +65,11 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // 학생만 조회
+    @GetMapping("/students")
+    public ResponseEntity<List<UserResponseDto>> getAllStudents() {
+        return ResponseEntity.ok(userService.getAllStudents());
     }
 } 

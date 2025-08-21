@@ -7,7 +7,7 @@ import lombok.*;
 @Entity
 @Table(name = "users",
        indexes = { @Index(name = "idx_users_email", columnList = "email"),
-                   @Index(name = "idx_users_role", columnList = "role") })
+                   @Index(name = "idx_users_user_type", columnList = "user_type") })
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class User extends BaseTimeEntity {
@@ -25,10 +25,14 @@ public class User extends BaseTimeEntity {
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
-    private UserRole role; // student, teacher
+    @Column(name = "user_type", length = 20, nullable = false)
+    private UserType userType; // student, teacher
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
     private UserStatus status; // active, inactive, suspended...
+    
+    public enum UserType {
+        STUDENT, TEACHER
+    }
 }

@@ -2,8 +2,8 @@ package com.kt.backendapp.service;
 
 import com.kt.backendapp.domain.quiz.Quiz;
 import com.kt.backendapp.domain.quiz.QuizRepository;
-import com.kt.backendapp.domain.user.User;
-import com.kt.backendapp.domain.user.UserRepository;
+import com.kt.backendapp.domain.user.Teacher;
+import com.kt.backendapp.domain.user.TeacherRepository;
 import com.kt.backendapp.dto.quiz.QuizCreateDto;
 import com.kt.backendapp.dto.quiz.QuizResponseDto;
 import com.kt.backendapp.dto.quiz.QuizUpdateDto;
@@ -23,13 +23,13 @@ import java.util.stream.Collectors;
 public class QuizService {
     
     private final QuizRepository quizRepository;
-    private final UserRepository userRepository;
+    private final TeacherRepository teacherRepository;
     
     // 퀴즈 생성
     @Transactional
     public QuizResponseDto createQuiz(QuizCreateDto createDto) {
         // 교사 존재 확인
-        User teacher = userRepository.findById(createDto.getCreatedBy())
+        Teacher teacher = teacherRepository.findById(createDto.getCreatedBy())
                 .orElseThrow(() -> new UserNotFoundException("교사를 찾을 수 없습니다: " + createDto.getCreatedBy()));
         
         Quiz quiz = Quiz.builder()
@@ -125,4 +125,15 @@ public class QuizService {
                 .map(QuizResponseDto::from)
                 .collect(Collectors.toList());
     }
+
+    // QuizService.java
+
+// 퀴즈 전체 조회
+public List<QuizResponseDto> getAllQuizzes() {
+    List<Quiz> quizzes = quizRepository.findAll();
+    return quizzes.stream()
+            .map(QuizResponseDto::from)
+            .collect(Collectors.toList());
+}
+
 } 
