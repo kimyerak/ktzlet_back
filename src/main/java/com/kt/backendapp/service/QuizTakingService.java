@@ -15,6 +15,7 @@ import com.kt.backendapp.dto.quiztaking.QuizTakingDto;
 import com.kt.backendapp.dto.quiztaking.QuizTakingResponseDto;
 import com.kt.backendapp.dto.quiztaking.QuestionAnswerDto;
 import com.kt.backendapp.dto.quiztaking.QuestionAnswerResponseDto;
+import com.kt.backendapp.dto.quiz.QuizSubmissionDto;
 import com.kt.backendapp.exception.QuizNotFoundException;
 import com.kt.backendapp.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -154,6 +155,23 @@ public class QuizTakingService {
                 .canRetry(responsePerQuestion.getRetryCount() < 3) // 최대 3번까지 재시도 가능
                 .nextQuestionId(nextQuestionId)
                 .build();
+    }
+    
+    // 퀴즈 완료 (최종 제출) - 새로운 통합 방식
+    @Transactional
+    public QuizTakingResponseDto submitQuiz(Long quizId, QuizSubmissionDto submissionDto) {
+        // 먼저 각 답안을 개별적으로 저장
+        for (QuizSubmissionDto.AnswerDto answerDto : submissionDto.getAnswers()) {
+            QuestionAnswerDto questionAnswerDto = new QuestionAnswerDto();
+            questionAnswerDto.setStudentId(submissionDto.getStudentId());
+            questionAnswerDto.setAnswer(answerDto.getAnswer());
+            
+            // 개별 답안 제출 (실시간 채점)
+            submitQuestionAnswer(answerDto.getQuestionId(), questionAnswerDto);
+        }
+        
+        // 퀴즈 완료 처리
+        return completeQuiz(quizId, submissionDto.getStudentId());
     }
     
     // 퀴즈 완료 (최종 제출)

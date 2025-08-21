@@ -3,8 +3,11 @@ package com.kt.backendapp.controller;
 import com.kt.backendapp.dto.quiz.QuizCreateDto;
 import com.kt.backendapp.dto.quiz.QuizResponseDto;
 import com.kt.backendapp.dto.quiz.QuizUpdateDto;
+import com.kt.backendapp.dto.quiz.QuizSubmissionDto;
+import com.kt.backendapp.dto.quiz.QuizStartDto;
 import com.kt.backendapp.dto.quiztaking.QuizTakingResponseDto;
 import com.kt.backendapp.service.QuizService;
+import com.kt.backendapp.service.QuizTakingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +22,7 @@ import java.util.List;
 public class QuizController {
     
     private final QuizService quizService;
+    private final QuizTakingService quizTakingService;
     
     // 퀴즈 생성
     @PostMapping
@@ -75,5 +79,23 @@ public ResponseEntity<List<QuizResponseDto>> getAllQuizzes() {
             @RequestParam String status) {
         QuizResponseDto responseDto = quizService.updateQuizStatus(quizId, status);
         return ResponseEntity.ok(responseDto);
+    }
+    
+    // 퀴즈 제출 (새로운 통합 방식)
+    @PostMapping("/{quizId}/submit")
+    public ResponseEntity<QuizTakingResponseDto> submitQuiz(
+            @PathVariable Long quizId,
+            @Valid @RequestBody QuizSubmissionDto submissionDto) {
+        QuizTakingResponseDto response = quizTakingService.submitQuiz(quizId, submissionDto);
+        return ResponseEntity.ok(response);
+    }
+    
+    // 퀴즈 시작 기록 생성
+    @PostMapping("/{quizId}/start")
+    public ResponseEntity<QuizTakingResponseDto> startQuiz(
+            @PathVariable Long quizId,
+            @Valid @RequestBody QuizStartDto startDto) {
+        QuizTakingResponseDto response = quizTakingService.startQuiz(quizId, startDto.getStudentId());
+        return ResponseEntity.ok(response);
     }
 } 
